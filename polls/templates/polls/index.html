@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VarMap Config</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+</head>
+
+<body class="">
+
+    <div class="container">
+
+
+        <nav class="navbar bg-body-tertiary">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex" href="#">
+                    <img src="https://i.upimg.com/bq97WeiLB_" alt="teste" width="70"
+                        class="d-inline-block align-text-top">
+                </a>
+                <h1 class="text-start">Mapping de Variáveis</h1>
+            </div>
+        </nav>
+
+        <hr>
+
+        <div>
+            <p>Submeta um arquivo xls/xlsx que contenha as varáveis exportadas da IHM.</p>
+            <form action="{% url 'index'%}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="input-group mb-3">
+                    <input type="file" class="form-control" id="excel_input" title="Upload excel file" name="excel_file"
+                        required="required">
+                    <button class="btn btn-outline-secondary" name="testando" type="submit"
+                        value="Upload">Upload</button>
+                </div>
+            </form>
+        </div>
+        {{error}}
+
+        <hr>
+
+        <div class="row">
+            <div class="">
+                <table class="table table-hover table-responsive table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">DataType</th>
+                            <th scope="col">Address</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Relacionar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <form action="{% url 'processa_formulario'%}" method="POST">
+                            {% csrf_token %}
+                            {% for row in list_data %}
+
+                            <tr>
+                                <td><input size="10" class="form-control" id="var_name" type="text" name="var_name" value="{{ row.0 }}"></td>
+                                
+                                <td> <input class="form-control" type="text" size="1" name="datatype" value="{{ row.1 }}" readonly> </td>
+                                <td> <input class="form-control" type="text" size="1" name="address" value="{{ row.3 }}" readonly></td>
+                                <td> <input class="form-control" type="text" size="2" name="lenght" value="{{row.2}}" readonly></td>
+
+                                <td> <select name="Relacionar" id="rel">
+                                        <option value="relacionar"> - </option>
+                                        {% for var in vars %}
+                                        <option value="{{var}}">{{var}}</option>
+                                        {% endfor %}
+                                    </select> </td>
+
+                            </tr>
+
+                            {% endfor %}
+                            
+                            <div class="d-grid gap-2 col-6 mx-auto">
+                                <button type="submit" class="btn btn-primary btn-lg" value="Enviar">Download JSON</button>
+                            </div>
+                        </form>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
