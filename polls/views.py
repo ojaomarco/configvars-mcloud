@@ -5,6 +5,8 @@ import json
 from django.http.request import QueryDict
 from xls2xlsx import XLS2XLSX
 
+from .utils import VarMap,WB
+
 def index(request):
     if "GET" == request.method:
         return render(request, 'polls/index.html')
@@ -31,51 +33,7 @@ def processa_formulario(request):
         raise
     return response 
 
-class WB():
 
-    def run(self, excel_file):
-        x2x = XLS2XLSX(excel_file)
-        excel_file = x2x.to_xlsx()
-        wb = excel_file
-        worksheet = wb.worksheets[0]
-
-        excel_data = list()
-
-        # iterating over the rows and
-        # getting value from each cell in row
-        for row in worksheet.iter_rows():
-            row_data = list()
-            if row[1].value == "Local HMI":
-                continue
-
-            # datatype
-            row[1].value = self.define_type(row[5].value)
-
-            # type
-            if row[2].value == '4x':
-                row[2].value = 'holding_registers'
-            else:
-                row[2].value = 'coils'
-
-            for cell in row:
-                if len(str(cell.value)) < 1:
-                    continue
-                row_data.append(str(cell.value))
-
-            excel_data.append(row_data)
-        return excel_data
-
-    def define_type(self, type):
-        if type == "Undesignated":
-            return ("BIT")
-        if type == "16-bit Unsigned":
-            return ("INT16")
-        if type == "32-bit Float":
-            return ("FLOAT")
-        if type == "64-bit Unsigned":
-            return ("STRING")
-
-class VarMap():
     def __init__(self, request):
         self.dict_request = self.request_to_dict(request)
 
@@ -155,77 +113,3 @@ STANDART_VARS = ["boBootOK", "boModoAuto", "boAlimentaPF", "liCntProdParcial", "
                  "AxisStatus__PosiUp_BarVolt", "lrPos__PosicDw_Aberto", "lrPos__PosicDw_Fechado", "lrActTorque__PosiReguDw",
                  "lrActTorque__PosiCambDw", "AxisStatus__PosiDw_BarVolt"]
 
-class Variable():
-
-    def __init__(self, var_par):
-        self.var_par = var_par
-        self.run()
-
-    # replace local to size
-    def local_to_size(self, var_par):
-        pl = var_par
-        for list1 in pl:
-            for par in list1:
-                if par == "MODBUS TCP/IP (Zero-based Addressing)":
-                    list1[1] = "1"
-        return pl
-
-    # replace dots to underline of var name
-    def replace_dots(self, lista):
-        pl = lista
-        for list1 in pl:
-            if len(list1) < 4:
-                pl.remove(list1)
-            else:
-                if '.' in list1[0]:
-                    list1[0] = list1[0].replace(".", "__")
-                if '/' in list1[0]:
-                    list1[0] = list1[0].replace("/", "__")
-        
-        return pl
-
-    # split the list for coils and holding_hegisters
-
-    def split_list(self, lista):
-        pl = lista
-        l1, l2, l3 = list(), list(), list()
-        data = dict()
-        for list1 in pl:
-            if "0x" in list1:
-                l1.append(list1)
-            else:
-                l2.append(list1)
-
-        l3.append(self.list_to_dict(l1))
-        l3.append(self.list_to_dict(l2))
-        data["coils"] = l3[0]
-        data["holding_registers"] = l3[1]
-
-        return json.dumps(data)
-
-    # convert list to dict
-    def list_to_dict(self, lista):
-        pl = lista
-        l = list()
-        for e in pl:
-            if len(e) < 6:
-                continue
-            data = dict()
-            data['Name'] = e[0]
-            data["Size"] = e[1]
-            data["DataType"] = e[5]
-            data["Address_1"] = int(e[3])
-            data["AccessRight"] = e[4]
-            data["GlobalDataType"] = e[5]
-
-            if data["DataType"] == "FLOAT":
-                data["Address_1"] = int(e[3])+1
-
-            l.append(data)
-        return l
-
-    # run all methods and return a Json file
-    def run(self):
-        self.var_par = self.local_to_size(self.var_par)
-        self.var_par = self.replace_dots(self.var_par)
-        return self.split_list(self.var_par)
